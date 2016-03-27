@@ -9,6 +9,7 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.EOFException;
 import java.util.List;
 import java.util.Map;
 
@@ -124,7 +125,7 @@ public class UsageUnitTest {
         assertTrue("Elements correct.", samples.toString().equals("[text1, text2, text3]"));
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void testNoData() throws Exception {
         XMLObjectIterable<Sample> xitr = new XMLObjectIterable.Builder<Sample>()
                 .from("")

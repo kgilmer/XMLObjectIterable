@@ -4,6 +4,7 @@ import android.util.Xml;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -15,7 +16,7 @@ import java.util.*;
 /**
  * Transform regular XML elements into POJOs.
  */
-public class XMLObjectIterable<T> implements Iterable<T> {
+public final class XMLObjectIterable<T> implements Iterable<T> {
 
     /**
      * Implementations act on XML traversals in visit() to generate
@@ -57,42 +58,99 @@ public class XMLObjectIterable<T> implements Iterable<T> {
      *
      * @param <T> type of POJO
      */
-    public static class Builder<T> {
+    public static final class Builder<T> {
         private InputStream is;
-        private String xpath;
+        private String xmlPath;
         private Transformer<T> transformer;
         private XmlPullParser pullParser;
 
+        /**
+         * Read XML from an InputStream.
+         *
+         * One call to from() is required.
+         *
+         * @param is InputStream
+         * @return builder
+         */
         public Builder<T> from(final InputStream is) {
-            Preconditions.checkNotNull(is, "InputStream cannot be null.");
             this.is = is;
+            Preconditions.checkNotNull(this.is, "InputStream cannot be null.");
             return this;
         }
 
-        public Builder<T> from(String sampleXml) {
-            this.is = new ByteArrayInputStream(sampleXml.getBytes());
+        /**
+         * Read XML from a String.
+         *
+         * One call to from() is required.
+         *
+         * @param xml String of XML document
+         * @return builder
+         */
+        public Builder<T> from(final String xml) {
+            this.is = new ByteArrayInputStream(xml.getBytes());
+            Preconditions.checkNotNull(this.is, "InputStream cannot be null.");
             return this;
         }
 
-        public Builder<T> pathOf(final String xpath) {
-            this.xpath = xpath;
+        /**
+         * Read XML from a classloader.
+         *
+         * One call to from() is required.
+         *
+         * @param clazz class containing correct classloader.
+         * @param resourcePath path to resource
+         * @return builder
+         */
+        public Builder<T> from(final Class<?> clazz, final String resourcePath) {
+            this.is = clazz.getResourceAsStream(resourcePath);
+            Preconditions.checkNotNull(this.is, "InputStream cannot be null.");
             return this;
         }
 
+        /**
+         * Defines the xml element which signifies
+         * the root of the POJO to be created.
+         *
+         * Required
+         *
+         * @param path path of root element
+         * @return builder
+         */
+        public Builder<T> pathOf(final String path) {
+            this.xmlPath = path;
+            return this;
+        }
+
+        /**
+         * Defines the Transformer that will generate
+         * POJOs for each matched path element.
+         *
+         * Required
+         *
+         * @param transformer Transformer instance
+         * @return builder
+         */
         public Builder<T> withTransform(final Transformer<T> transformer) {
             this.transformer = transformer;
             return this;
         }
 
+        /**
+         * Creates the iterable.
+         * Will throw a RuntimeException if insufficient
+         * input state is supplied.
+         *
+         * @return XMLObjectIterable
+         */
         public XMLObjectIterable<T> create() {
             Preconditions.checkNotNull(is, "Must call from() on builder.");
-            Preconditions.checkNotNull(xpath, "Must call pathOf() on builder.");
+            Preconditions.checkNotNull(xmlPath, "Must call pathOf() on builder.");
             Preconditions.checkNotNull(transformer, "Must call withTransform() on builder.");
 
-            return new XMLObjectIterable<>(pullParser, is, xpath, transformer);
+            return new XMLObjectIterable<>(pullParser, is, xmlPath, transformer);
         }
 
-        public Builder<T> withParser(XmlPullParser parser) {
+        public Builder<T> withParser(final XmlPullParser parser) {
             this.pullParser = parser;
             return this;
         }
@@ -103,31 +161,38 @@ public class XMLObjectIterable<T> implements Iterable<T> {
      *
      * @param <T>
      */
-    private static class PullParserIterable<T> implements Iterable<T> {
+    private static final class PullParserIterable<T> implements Iterable<T> {
 
+        private static final String PATH_SEPARATOR = "/";
+
+        /**
+         * PullParser can scan for the next valid node
+         * based on xmlPath or create a POJO if parsing
+         * nodes that are part of the POJO.
+         */
         enum TraversalMode {
             SCAN, POPULATE;
         }
 
         private final XmlPullParser parser;
-        private final List<String> xpath;
+        private final List<String> xmlPath;
         private final Transformer<T> transformer;
         private final List<String> nodeStack = new ArrayList<String>();
         private TraversalMode traversalMode = TraversalMode.SCAN;
 
         /**
          * @param parser      pull parser initialized with input.
-         * @param xpath       '/' separated string of xml elements from which POJOs are initialized
+         * @param xmlPath       '/' separated string of xml elements from which POJOs are initialized
          *                    For example 'rss/channel/item' for Items in an RSS feed.
          * @param transformer instance of a transformer that generates the POJOs.
          */
-        public PullParserIterable(final XmlPullParser parser, final String xpath, final Transformer<T> transformer) {
+        public PullParserIterable(final XmlPullParser parser, final String xmlPath, final Transformer<T> transformer) {
             this.parser = parser;
-            this.xpath = new ArrayList<>();
-            final String[] nodes = xpath.split("/");
-            for (final String node : nodes) {
-                this.xpath.add(node.trim());
-            }
+            this.xmlPath = Splitter
+                    .on(PATH_SEPARATOR)
+                    .omitEmptyStrings()
+                    .trimResults()
+                    .splitToList(xmlPath);
             this.transformer = transformer;
         }
 
@@ -143,7 +208,7 @@ public class XMLObjectIterable<T> implements Iterable<T> {
                         throw new IllegalStateException("next expected to be null.");
                     }
 
-                    Optional<T> nextOpt = loop();
+                    final Optional<T> nextOpt = loop();
 
                     if (nextOpt != null) {
                         next = nextOpt.get();
@@ -156,7 +221,7 @@ public class XMLObjectIterable<T> implements Iterable<T> {
                 @Override
                 public T next() {
                     if (next == null) {
-                        Optional<T> nextOpt = loop();
+                        final Optional<T> nextOpt = loop();
 
                         if (nextOpt != null) {
                             next = nextOpt.get();
@@ -171,6 +236,13 @@ public class XMLObjectIterable<T> implements Iterable<T> {
                     return nv;
                 }
 
+                /**
+                 * Scan the input until the transformer
+                 * returns a POJO or we reach the end
+                 * of the doucment.
+                 *
+                 * @return optional POJO
+                 */
                 private Optional<T> loop() {
                     Optional<T> nextOpt;
                     do {
@@ -180,13 +252,17 @@ public class XMLObjectIterable<T> implements Iterable<T> {
                     return nextOpt;
                 }
 
+                /**
+                 * Parse the input XML and create a POJO
+                 * when the next xmlPath element is found.
+                 * @return optional POJO
+                 */
                 private Optional<T> getNext() {
-
                     int nextTokenType;
                     int nestLevel = 0;
                     String lastNodeName = null;
                     String lastNodeText = null;
-                    Map<String, String> lastNodeAttribs = new HashMap<>();
+                    final Map<String, String> lastNodeAttribs = new HashMap<>();
 
                     try {
                         while ((nextTokenType = parser.next()) != XmlPullParser.END_DOCUMENT) {
@@ -202,7 +278,7 @@ public class XMLObjectIterable<T> implements Iterable<T> {
                                         break;
                                 }
 
-                                if (listsEqual(xpath, nodeStack)) {
+                                if (listsEqual(xmlPath, nodeStack)) {
                                     traversalMode = TraversalMode.POPULATE;
                                     lastNodeName = nodeStack.get(nodeStack.size() - 1);
                                     nestLevel++;
@@ -261,7 +337,7 @@ public class XMLObjectIterable<T> implements Iterable<T> {
          * @param parser parser at node start
          * @param lastNodeAttribs map of attribs.
          */
-        private static void loadAttribs(XmlPullParser parser, Map<String, String> lastNodeAttribs) {
+        private static void loadAttribs(final XmlPullParser parser, final Map<String, String> lastNodeAttribs) {
             final int attribCount = parser.getAttributeCount();
 
             for (int index = 0; index < attribCount; ++index) {
@@ -269,24 +345,24 @@ public class XMLObjectIterable<T> implements Iterable<T> {
             }
         }
 
-        private Map<String, String> getAttribs(final XmlPullParser parser) {
-            //TODO: Implement
-            return Collections.emptyMap();
-        }
-
+        /**
+         * @param l1 list 1
+         * @param l2 list 2
+         * @return true if lists contain same elements, false otherwise
+         */
         private boolean listsEqual(final List<String> l1, final List<String> l2) {
             return l1.hashCode() == l2.hashCode();
         }
     }
 
-    private final String xpath;
+    private final String xmlPath;
     private final Transformer<T> transformer;
     private final InputStream is;
     private final XmlPullParser parser;
 
-    private XMLObjectIterable(XmlPullParser pullParser, final InputStream is, final String xpath, final Transformer<T> transformer) {
+    private XMLObjectIterable(final XmlPullParser pullParser, final InputStream is, final String xmlPath, final Transformer<T> transformer) {
         this.is = is;
-        this.xpath = xpath;
+        this.xmlPath = xmlPath;
         this.transformer = transformer;
         this.parser = pullParser;
     }
@@ -296,28 +372,28 @@ public class XMLObjectIterable<T> implements Iterable<T> {
 
         XmlPullParser pullParser = parser;
         if (pullParser == null) {
-            pullParser = createParser(is);
+            pullParser = createDefaultParser(is);
         } else {
             try {
                 pullParser.setInput(is, null);
-            } catch (XmlPullParserException e) {
+            } catch (final XmlPullParserException e) {
                 throw new RuntimeException("Failed to read stream.", e);
             }
         }
 
-        final PullParserIterable<T> iterable = new PullParserIterable<T>(pullParser, xpath, transformer);
+        final PullParserIterable<T> iterable = new PullParserIterable<T>(pullParser, xmlPath, transformer);
 
         return iterable.iterator();
     }
 
-    private static XmlPullParser createParser(final InputStream inputStream) {
+    private static XmlPullParser createDefaultParser(final InputStream inputStream) {
         try {
             final XmlPullParser parser = Xml.newPullParser();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
             parser.setInput(inputStream, null);
 
             return parser;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new RuntimeException("Failed to create XmlPullParser.", e);
         }
     }
