@@ -1,5 +1,7 @@
 # XMLObjectIterable
 
+[![Release](https://jitpack.io/v/kgilmer/XMLObjectIterable.svg)](https://jitpack.io/#kggilmer/XMLObjectIterable)
+
 Iterate over POJOs from XML.
 
 ## Usage Example ##
@@ -14,14 +16,18 @@ XMLObjectIterable<Sample> xitr = new XMLObjectIterable.Builder<Sample>()
 
 # Get XMLObjectIterable into your Gradle project
 
+Add it to your build.gradle with:
 ```gradle
-   repositories { 
-        jcenter()
+allprojects {
+    repositories {
         maven { url "https://jitpack.io" }
-   }
-   dependencies {
-         compile 'com.github.kgilmer:XMLObjectIterable:0.2'
-   }
-   ```
+    }
+}
+```
+and:
 
-[![Release](https://jitpack.io/v/kgilmer/XMLObjectIterable.svg)](https://jitpack.io/#kggilmer/XMLObjectIterable)
+```gradle
+dependencies {
+    compile 'com.github.kgilmer:XMLObjectIterable:0.3'
+}
+```
