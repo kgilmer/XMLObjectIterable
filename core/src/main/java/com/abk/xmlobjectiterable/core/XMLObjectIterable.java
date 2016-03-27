@@ -243,7 +243,7 @@ public class XMLObjectIterable<T> implements Iterable<T> {
                             }
                         }
                     } catch (XmlPullParserException | IOException e) {
-                        e.printStackTrace();
+                        throw new RuntimeException("Error while parsing XML.", e);
                     }
 
                     return null;
