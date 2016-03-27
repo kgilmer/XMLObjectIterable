@@ -23,3 +23,5 @@ XMLObjectIterable<Sample> xitr = new XMLObjectIterable.Builder<Sample>()
          compile 'com.github.kgilmer:XMLObjectIterable:0.2'
    }
    ```
+
+[![Release](https://jitpack.io/v/kgilmer/XMLObjectIterable.svg)](https://jitpack.io/#kggilmer/XMLObjectIterable)
