@@ -20,6 +20,6 @@ XMLObjectIterable<Sample> xitr = new XMLObjectIterable.Builder<Sample>()
         maven { url "https://jitpack.io" }
    }
    dependencies {
-         compile 'com.github.jitpack:gradle-simple:1.0'
+         compile 'com.github.kgilmer:XMLObjectIterable:0.2'
    }
    ```
