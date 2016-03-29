@@ -5,6 +5,7 @@ import android.util.Xml;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.io.Closeables;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -175,6 +176,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
         }
 
         private final XmlPullParser parser;
+        private InputStream inputStream;
         private final List<String> xmlPath;
         private final Transformer<T> transformer;
         private final List<String> nodeStack = new ArrayList<String>();
@@ -186,8 +188,9 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
          *                    For example 'rss/channel/item' for Items in an RSS feed.
          * @param transformer instance of a transformer that generates the POJOs.
          */
-        public PullParserIterable(final XmlPullParser parser, final String xmlPath, final Transformer<T> transformer) {
+        public PullParserIterable(final XmlPullParser parser, final InputStream is, final String xmlPath, final Transformer<T> transformer) {
             this.parser = parser;
+            this.inputStream = is;
             this.xmlPath = Splitter
                     .on(PATH_SEPARATOR)
                     .omitEmptyStrings()
@@ -214,6 +217,9 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
                         next = nextOpt.get();
                         return true;
                     }
+
+                    //No data, close stream.
+                    Closeables.closeQuietly(inputStream);
 
                     return false;
                 }
@@ -381,7 +387,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
             }
         }
 
-        final PullParserIterable<T> iterable = new PullParserIterable<T>(pullParser, xmlPath, transformer);
+        final PullParserIterable<T> iterable = new PullParserIterable<T>(pullParser, is, xmlPath, transformer);
 
         return iterable.iterator();
     }
