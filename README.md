@@ -2,6 +2,8 @@
 
 [![Release](https://jitpack.io/v/kgilmer/XMLObjectIterable.svg)](https://jitpack.io/#kggilmer/XMLObjectIterable)
 
+<a href="http://www.methodscount.com/?lib=com.github.kgilmer%3AXMLObjectIterable%3A0.5"><img src="https://img.shields.io/badge/Methods and size-core: 75 | deps: 15076 | 11 KB-e91e63.svg"></img></a>
+
 Iterate over POJOs from XML using the XmlPullParser built into Android or supply your own in Java.
 
 ## Usage Example ##
