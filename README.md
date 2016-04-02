@@ -6,6 +6,10 @@
 
 Iterate over POJOs from XML using the XmlPullParser built into Android or supply your own in Java.
 
+## Overview ##
+
+There are a lot of tools and libraries to parse XML data in Java and Android.  This small library is designed for one use case: retrieving lists of XML elements as POJOs in an `Iterable`.  There is no magic; you supply the path to root of the element needed and a type that creates POJO instances based on XML data as passed from an XmlPullParser.
+
 ## Usage Example ##
 ```java
 XMLObjectIterable<Sample> xitr = new XMLObjectIterable.Builder<Sample>()
