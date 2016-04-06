@@ -1,7 +1,6 @@
 package com.abk.xmlobjectiterable.transformers;
 
-import com.abk.xmlobjectiterable.core.XMLObjectIterable;
-import com.google.common.base.Optional;
+import com.abk.xmlobjectiterable.XMLObjectIterable;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import org.junit.Before;
@@ -13,15 +12,15 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
  * Usage unit tests
  */
-public class RSSItemUnitTest {
+public class RSSBookmarkItemUnitTest {
 
     private XmlPullParser parser;
 
@@ -35,25 +34,29 @@ public class RSSItemUnitTest {
     @Test
     public void testReadRSSItems() throws Exception {
 
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream("rss.xml");
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("rss-opml.xml");
 
-        XMLObjectIterable<RSSItem> xitr = new XMLObjectIterable.Builder<RSSItem>()
+        XMLObjectIterable<RSSBookmarkItem> xitr = new XMLObjectIterable.Builder<RSSBookmarkItem>()
                 .from(is)
-                .pathOf(RSSItem.RSS_PATH)
-                .withTransform(RSSItem.RSS_TRANSFORMER)
+                .withTransform(RSSBookmarkItem.TRANSFORMER)
                 .withParser(parser)
                 .create();
 
-        List<RSSItem> rssItems = Lists.newArrayList(xitr);
+        List<RSSBookmarkItem> rssItems = Lists.newArrayList(xitr);
 
-        assertTrue("Contains 30 elements.", rssItems.size() == 30);
+
         Set<String> titles = new HashSet<>();
-        for (RSSItem i : rssItems) {
+        for (RSSBookmarkItem i : rssItems) {
             if (!Strings.isNullOrEmpty(i.getTitle())) {
+                assertFalse("Have not already seen title " + i.getTitle(), titles.contains(i.getTitle()));
                 titles.add(i.getTitle());
             }
         }
-        assertTrue("Item names are unique and all present.", titles.size() == 30);
+        assertTrue("Item names are unique and all present.", titles.size() == 405);
+
+        assertTrue("Contains 407 elements.", rssItems.size() == 405);
     }
+
+
 
 }

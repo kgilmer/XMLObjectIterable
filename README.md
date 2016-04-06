@@ -10,11 +10,17 @@ Iterate over POJOs from XML using the XmlPullParser built into Android or supply
 
 There are a lot of tools and libraries to parse XML data in Java and Android.  This small library is designed for one use case: retrieving lists of XML elements as POJOs in an `Iterable`.  There is no magic; you supply the path to root of the element needed and a type that creates POJO instances based on XML data as passed from an XmlPullParser.
 
+## Features ##
+- Minimal dependencies (Guava)
+- Single file
+- Memory efficient: Creates POJOs as the XML stream is read.
+- The transformer can also filter via API.
+- Utilizes the built-in pull parser provided by Android.
+
 ## Usage Example ##
 ```java
 XMLObjectIterable<Sample> xitr = new XMLObjectIterable.Builder<Sample>()
   .from(SAMPLE_XML)
-  .pathOf("n1/l2/i1")
   .withTransform(new SampleTransformer())
   .withParser(parser)
   .create();
@@ -22,6 +28,40 @@ XMLObjectIterable<Sample> xitr = new XMLObjectIterable.Builder<Sample>()
   for (Sample sample : xitr) {
     // have fun with your POJO!
   }
+```
+
+The work of loading the POJO from node scanning is done in `SampleTransformer`:
+```java
+class SampleTransformer implements XMLObjectIterable.Transformer<Sample> {
+
+    private String val;
+
+    @Override
+    public Optional<Sample> transform() {
+        if (val == null) {
+            return Optional.absent();
+        }
+
+        return Optional.of(new Sample(val));
+    }
+
+    @Override
+    public void visit(String name, String value, Map<String, String> attribs) {
+        if (!Strings.isNullOrEmpty(value)) {
+            val = value;
+        }
+    }
+
+    @Override
+    public void reset() {
+        val = null;
+    }
+
+    @Override
+    public String getPath() {
+        return "n1/l2/i1";
+    }
+}
 ```
 
 # Get XMLObjectIterable into your Gradle project

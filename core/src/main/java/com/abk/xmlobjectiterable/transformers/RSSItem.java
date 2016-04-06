@@ -1,6 +1,6 @@
 package com.abk.xmlobjectiterable.transformers;
 
-import com.abk.xmlobjectiterable.core.XMLObjectIterable;
+import com.abk.xmlobjectiterable.XMLObjectIterable;
 import com.google.common.base.Optional;
 
 import java.util.Map;
@@ -110,6 +110,11 @@ public class RSSItem {
             pubDate = null;
             comments = null;
             description = null;
+        }
+
+        @Override
+        public String getPath() {
+            return RSS_PATH;
         }
     };
 }

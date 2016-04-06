@@ -1,5 +1,6 @@
 package com.abk.xmlobjectiterable.core;
 
+import com.abk.xmlobjectiterable.XMLObjectIterable;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -9,7 +10,6 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
-import java.io.EOFException;
 import java.util.List;
 import java.util.Map;
 
@@ -70,6 +70,11 @@ public class UsageUnitTest {
         public void reset() {
             val = null;
         }
+
+        @Override
+        public String getPath() {
+            return "n1/l2/i1";
+        }
     }
 
     @Before
@@ -84,7 +89,6 @@ public class UsageUnitTest {
 
         XMLObjectIterable<Sample> xitr = new XMLObjectIterable.Builder<Sample>()
                 .from(SAMPLE_XML)
-                .pathOf("n1/l2/i1")
                 .withTransform(new SampleTransformer())
                 .withParser(parser)
                 .create();
@@ -114,7 +118,6 @@ public class UsageUnitTest {
 
         XMLObjectIterable<Sample> xitr = new XMLObjectIterable.Builder<Sample>()
                 .from(sampleXML)
-                .pathOf("n1/l2/i1")
                 .withTransform(new SampleTransformer())
                 .withParser(parser)
                 .create();
@@ -129,7 +132,6 @@ public class UsageUnitTest {
     public void testNoData() throws Exception {
         XMLObjectIterable<Sample> xitr = new XMLObjectIterable.Builder<Sample>()
                 .from("")
-                .pathOf("n1/l2/i1")
                 .withTransform(new SampleTransformer())
                 .withParser(parser)
                 .create();

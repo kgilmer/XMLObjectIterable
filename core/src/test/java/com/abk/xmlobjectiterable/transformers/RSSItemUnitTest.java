@@ -1,6 +1,6 @@
 package com.abk.xmlobjectiterable.transformers;
 
-import com.abk.xmlobjectiterable.core.XMLObjectIterable;
+import com.abk.xmlobjectiterable.XMLObjectIterable;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import org.junit.Before;
@@ -14,13 +14,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
  * Usage unit tests
  */
-public class RSSBookmarkItemUnitTest {
+public class RSSItemUnitTest {
 
     private XmlPullParser parser;
 
@@ -34,30 +33,24 @@ public class RSSBookmarkItemUnitTest {
     @Test
     public void testReadRSSItems() throws Exception {
 
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream("rss-opml.xml");
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("rss.xml");
 
-        XMLObjectIterable<RSSBookmarkItem> xitr = new XMLObjectIterable.Builder<RSSBookmarkItem>()
+        XMLObjectIterable<RSSItem> xitr = new XMLObjectIterable.Builder<RSSItem>()
                 .from(is)
-                .pathOf(RSSBookmarkItem.PATH)
-                .withTransform(RSSBookmarkItem.TRANSFORMER)
+                .withTransform(RSSItem.RSS_TRANSFORMER)
                 .withParser(parser)
                 .create();
 
-        List<RSSBookmarkItem> rssItems = Lists.newArrayList(xitr);
+        List<RSSItem> rssItems = Lists.newArrayList(xitr);
 
-
+        assertTrue("Contains 30 elements.", rssItems.size() == 30);
         Set<String> titles = new HashSet<>();
-        for (RSSBookmarkItem i : rssItems) {
+        for (RSSItem i : rssItems) {
             if (!Strings.isNullOrEmpty(i.getTitle())) {
-                assertFalse("Have not already seen title " + i.getTitle(), titles.contains(i.getTitle()));
                 titles.add(i.getTitle());
             }
         }
-        assertTrue("Item names are unique and all present.", titles.size() == 405);
-
-        assertTrue("Contains 407 elements.", rssItems.size() == 405);
+        assertTrue("Item names are unique and all present.", titles.size() == 30);
     }
-
-
 
 }

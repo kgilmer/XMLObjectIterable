@@ -1,4 +1,4 @@
-package com.abk.xmlobjectiterable.core;
+package com.abk.xmlobjectiterable;
 
 import android.util.Xml;
 
@@ -52,6 +52,16 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
          * reset for next element.
          */
         void reset();
+
+        /**
+         * Defines the xml element which signifies
+         * the root of the POJO to be created.
+         *
+         * Required
+         *
+         * @return path path of root element
+         */
+        String getPath();
     }
 
     /**
@@ -61,7 +71,6 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
      */
     public static final class Builder<T> {
         private InputStream is;
-        private String xmlPath;
         private Transformer<T> transformer;
         private XmlPullParser pullParser;
 
@@ -109,20 +118,6 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
         }
 
         /**
-         * Defines the xml element which signifies
-         * the root of the POJO to be created.
-         *
-         * Required
-         *
-         * @param path path of root element
-         * @return builder
-         */
-        public Builder<T> pathOf(final String path) {
-            this.xmlPath = path;
-            return this;
-        }
-
-        /**
          * Defines the Transformer that will generate
          * POJOs for each matched path element.
          *
@@ -145,10 +140,9 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
          */
         public XMLObjectIterable<T> create() {
             Preconditions.checkNotNull(is, "Must call from() on builder.");
-            Preconditions.checkNotNull(xmlPath, "Must call pathOf() on builder.");
             Preconditions.checkNotNull(transformer, "Must call withTransform() on builder.");
 
-            return new XMLObjectIterable<>(pullParser, is, xmlPath, transformer);
+            return new XMLObjectIterable<>(pullParser, is, transformer);
         }
 
         public Builder<T> withParser(final XmlPullParser parser) {
@@ -366,10 +360,10 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
     private final InputStream is;
     private final XmlPullParser parser;
 
-    private XMLObjectIterable(final XmlPullParser pullParser, final InputStream is, final String xmlPath, final Transformer<T> transformer) {
+    private XMLObjectIterable(final XmlPullParser pullParser, final InputStream is, final Transformer<T> transformer) {
         this.is = is;
-        this.xmlPath = xmlPath;
         this.transformer = transformer;
+        this.xmlPath = transformer.getPath();
         this.parser = pullParser;
     }
 

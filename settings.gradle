@@ -1,1 +1,1 @@
-include ':transformers', ':core'
+include ':core'
