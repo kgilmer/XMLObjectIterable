@@ -78,6 +78,6 @@ and:
 
 ```gradle
 dependencies {
-    compile 'com.github.kgilmer:XMLObjectIterable:0.5'
+    compile 'com.github.kgilmer:XMLObjectIterable:0.6'
 }
 ```
