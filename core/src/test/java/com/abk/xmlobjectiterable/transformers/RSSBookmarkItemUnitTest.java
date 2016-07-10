@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -35,6 +36,8 @@ public class RSSBookmarkItemUnitTest {
     public void testReadRSSItems() throws Exception {
 
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("rss-opml.xml");
+
+        assertNotNull("InputStream cannot be null.", is);
 
         XMLObjectIterable<RSSBookmarkItem> xitr = new XMLObjectIterable.Builder<RSSBookmarkItem>()
                 .from(is)
