@@ -1,6 +1,6 @@
 package com.abk.xmlobjectiterable;
 
-import android.util.Xml;
+//import android.util.Xml;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -186,6 +186,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
         public XMLObjectIterable<T> create() {
             Preconditions.checkNotNull(is, "Must call from() on builder.");
             Preconditions.checkNotNull(transformer, "Must call withTransform() on builder.");
+            Preconditions.checkNotNull(pullParser, "Must set a XmlPullParser instance.");
 
             return new XMLObjectIterable<>(pullParser, is, transformer);
         }
@@ -423,21 +424,26 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
     public Iterator<T> iterator() {
 
         XmlPullParser pullParser = parser;
+        /*
         if (pullParser == null) {
             pullParser = createDefaultParser(is);
         } else {
+        */
             try {
                 pullParser.setInput(is, null);
             } catch (final XmlPullParserException e) {
                 throw new RuntimeException("Failed to read stream.", e);
             }
+        /*
         }
+        */
 
         final PullParserIterable<T> iterable = new PullParserIterable<T>(pullParser, is, new XmlPathNodeEvaluator(xmlPath), transformer);
 
         return iterable.iterator();
     }
 
+    /*
     private static XmlPullParser createDefaultParser(final InputStream inputStream) {
         try {
             final XmlPullParser parser = Xml.newPullParser();
@@ -449,4 +455,5 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
             throw new RuntimeException("Failed to create XmlPullParser.", e);
         }
     }
+    */
 }
