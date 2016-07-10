@@ -4,6 +4,7 @@ import android.util.Xml;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.io.Closeables;
 import org.xmlpull.v1.XmlPullParser;
@@ -62,6 +63,50 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
          * @return path path of root element
          */
         String getPath();
+    }
+
+    public static class XmlTraversalState {
+        int event;
+        String lastNodeName;
+        Map<String, String> lastNodeAttribs;
+
+        public XmlTraversalState(int event, String lastNodeName, Map<String, String> lastNodeAttribs) {
+            this.event = event;
+            this.lastNodeName = lastNodeName;
+            this.lastNodeAttribs = lastNodeAttribs;
+        }
+    }
+
+    /**
+     * TODO
+     */
+    private final class XmlPathNodeEvaluator implements Predicate<XmlTraversalState> {
+        private static final String PATH_SEPARATOR = "/";
+        private final List<String> xmlPath;
+        private final List<String> nodeStack;
+
+        public XmlPathNodeEvaluator(String xPath) {
+            this.xmlPath = Splitter
+                    .on(PATH_SEPARATOR)
+                    .omitEmptyStrings()
+                    .trimResults()
+                    .splitToList(xPath);
+            this.nodeStack = new ArrayList<>(xmlPath.size());
+        }
+
+        @Override
+        public boolean apply(XmlTraversalState input) {
+            switch (input.event) {
+                case XmlPullParser.START_TAG:
+                    nodeStack.add(parser.getName());
+                    break;
+                case XmlPullParser.END_TAG:
+                    nodeStack.remove(nodeStack.size() - 1);
+                    break;
+            }
+
+            return nodeStack.hashCode() == xmlPath.hashCode();
+        }
     }
 
     /**
@@ -171,25 +216,22 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
 
         private final XmlPullParser parser;
         private InputStream inputStream;
-        private final List<String> xmlPath;
+        private final Predicate<XmlTraversalState> parsePredicate;
+        //private final List<String> xmlPath;
         private final Transformer<T> transformer;
-        private final List<String> nodeStack = new ArrayList<String>();
+        //private final List<String> nodeStack = new ArrayList<String>();
         private TraversalMode traversalMode = TraversalMode.SCAN;
 
         /**
          * @param parser      pull parser initialized with input.
-         * @param xmlPath       '/' separated string of xml elements from which POJOs are initialized
-         *                    For example 'rss/channel/item' for Items in an RSS feed.
+         * @param is          inputStream of XML
+         * @param parsePredicate Predicate to determine of transformer shall be called on given node
          * @param transformer instance of a transformer that generates the POJOs.
          */
-        public PullParserIterable(final XmlPullParser parser, final InputStream is, final String xmlPath, final Transformer<T> transformer) {
+        public PullParserIterable(final XmlPullParser parser, final InputStream is, final Predicate<XmlTraversalState> parsePredicate, final Transformer<T> transformer) {
             this.parser = parser;
             this.inputStream = is;
-            this.xmlPath = Splitter
-                    .on(PATH_SEPARATOR)
-                    .omitEmptyStrings()
-                    .trimResults()
-                    .splitToList(xmlPath);
+            this.parsePredicate = parsePredicate;
             this.transformer = transformer;
         }
 
@@ -263,24 +305,30 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
                     String lastNodeName = null;
                     String lastNodeText = null;
                     final Map<String, String> lastNodeAttribs = new HashMap<>();
+                    XmlTraversalState xts = new XmlTraversalState(-1, null, null);
 
                     try {
                         while ((nextTokenType = parser.next()) != XmlPullParser.END_DOCUMENT) {
                             if (traversalMode == TraversalMode.SCAN) {
+                                xts.event = nextTokenType;
+                                //TODO call nodeEval
                                 switch (nextTokenType) {
                                     case XmlPullParser.START_TAG:
-                                        nodeStack.add(parser.getName());
+                                        lastNodeName = parser.getName();
+                                        //nodeStack.add(parser.getName());
                                         loadAttribs(parser, lastNodeAttribs);
                                         break;
                                     case XmlPullParser.END_TAG:
-                                        nodeStack.remove(nodeStack.size() - 1);
+                                        //nodeStack.remove(nodeStack.size() - 1);
                                         lastNodeAttribs.clear();
                                         break;
                                 }
 
-                                if (listsEqual(xmlPath, nodeStack)) {
+                                xts.lastNodeAttribs = lastNodeAttribs;
+                                xts.lastNodeName = lastNodeName;
+                                if (parsePredicate.apply(xts)) {
                                     traversalMode = TraversalMode.POPULATE;
-                                    lastNodeName = nodeStack.get(nodeStack.size() - 1);
+                                    //lastNodeName = nodeStack.get(nodeStack.size() - 1);
                                     nestLevel++;
                                     //return transformer.apply(parser);
                                 }
@@ -309,7 +357,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
                                     //Returned to the root of the XPATH, should be
                                     //able to construct the POJO
                                     traversalMode = TraversalMode.SCAN;
-                                    nodeStack.remove(nodeStack.size() - 1);
+                                    //nodeStack.remove(nodeStack.size() - 1);
 
                                     final Optional<T> val = transformer.transform();
                                     transformer.reset();
@@ -381,7 +429,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
             }
         }
 
-        final PullParserIterable<T> iterable = new PullParserIterable<T>(pullParser, is, xmlPath, transformer);
+        final PullParserIterable<T> iterable = new PullParserIterable<T>(pullParser, is, new XmlPathNodeEvaluator(xmlPath), transformer);
 
         return iterable.iterator();
     }
