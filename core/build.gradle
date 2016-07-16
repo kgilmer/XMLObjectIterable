@@ -4,6 +4,7 @@ tasks.withType(JavaCompile) {
 }
 
 apply plugin: 'java'
+apply plugin: 'me.champeau.gradle.jmh'
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
@@ -11,6 +12,11 @@ dependencies {
     compile 'xmlpull:xmlpull:1.1.3.1'
     compile 'org.ogce:xpp3:1.1.6'
     compile 'com.google.guava:guava:19.0'
+}
+
+jmh {
+    include = 'benchmarks\\.HelloWorld'
+    duplicateClassesStrategy = 'warn'
 }
 
 task copyTestResources(type: Copy) {
