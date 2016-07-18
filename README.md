@@ -4,11 +4,11 @@
 
 <a href="http://www.methodscount.com/?lib=com.github.kgilmer%3AXMLObjectIterable%3A0.5"><img src="https://img.shields.io/badge/Methods and size-core: 75 | deps: 15076 | 11 KB-e91e63.svg"></img></a>
 
-Iterate over POJOs from XML using the XmlPullParser built into Android or supply your own in Java.
+Simplify XML parsing on Java and Android with this abstraction built on top of `XmlPullParser`.
 
 ## Overview ##
 
-There are a lot of tools and libraries to parse XML data in Java and Android.  This small library is designed for one use case: retrieving lists of XML elements as POJOs in an `Iterable`.  There is no magic; you supply the path to root of the element needed and a type that creates POJO instances based on XML data as passed from an XmlPullParser.
+This library is designed for one use case: retrieving lists of XML elements as POJOs in an `Iterable`.  There is no magic; you supply the path to root of the element needed and a type that creates POJO instances based on XML data as passed from an XmlPullParser.  The logic of extracting data from the stream of XML events is neatly encapsulated in a `XmlObjectIterable.Transformer<>`.
 
 ## Features ##
 - Single file
@@ -29,7 +29,7 @@ XMLObjectIterable<Sample> xitr = new XMLObjectIterable.Builder<Sample>()
   }
 ```
 
-The work of loading the POJO from node scanning is done in `SampleTransformer`:
+The work of loading the POJO from node scanning is done in this `SampleTransformer`:
 ```java
 class SampleTransformer implements XMLObjectIterable.Transformer<Sample> {
 
@@ -80,3 +80,25 @@ dependencies {
     compile 'com.github.kgilmer:XMLObjectIterable:0.7'
 }
 ```
+
+# Release Notes #
+
+## Release 0.8.0 ##
+
+- Added JMH benchmarking data.
+- Extract XML path specification from transformer.
+- Allow client to specify Predicate for event parsing.
+- Misc cleanup.
+
+### Benchmark Results ###
+
+```
+Benchmark                                     Mode  Cnt    Score    Error  Units
+ParsingTransformBenchmarks.testReadRSSItems  thrpt  200  813.907 ± 17.759  ops/s
+```
+
+## Release 0.7.0 ##
+
+- Migrated core from Android library to pure Java library.
+- Removed Android dependencies from core.
+- Created 'Android Example' module for Android usage.

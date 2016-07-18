@@ -43,6 +43,7 @@ public class RSSBookmarkItemUnitTest {
                 .from(is)
                 .withTransform(RSSBookmarkItem.TRANSFORMER)
                 .withParser(parser)
+                .onNodes(RSSBookmarkItem.PATH)
                 .create();
 
         List<RSSBookmarkItem> rssItems = Lists.newArrayList(xitr);

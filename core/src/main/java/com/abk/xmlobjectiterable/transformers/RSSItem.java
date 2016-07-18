@@ -111,10 +111,5 @@ public class RSSItem {
             comments = null;
             description = null;
         }
-
-        @Override
-        public String getPath() {
-            return RSS_PATH;
-        }
     };
 }

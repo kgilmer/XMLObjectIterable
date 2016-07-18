@@ -20,13 +20,15 @@ import static org.junit.Assert.*;
  */
 public class UsageUnitTest {
 
-    private static final String SAMPLE_XML = "<n1>\n" +
+    public static final String SAMPLE_XML = "<n1>\n" +
             "    <l2>\n" +
             "        <i1 attrib=\"3\">text1</i1>\n" +
             "        <i1 attrib=\"6\">text2</i1>\n" +
             "        <i1 attrib=\"9\">text3</i1>\n" +
             "    </l2>\n" +
             "</n1>";
+    public static final String XML_PATH = "n1/l2/i1";
+
     private XmlPullParser parser;
 
     static class Sample {
@@ -46,7 +48,7 @@ public class UsageUnitTest {
         }
     }
 
-    static class SampleTransformer implements XMLObjectIterable.Transformer<Sample> {
+    public static class SampleTransformer implements XMLObjectIterable.Transformer<Sample> {
 
         private String val;
 
@@ -70,11 +72,6 @@ public class UsageUnitTest {
         public void reset() {
             val = null;
         }
-
-        @Override
-        public String getPath() {
-            return "n1/l2/i1";
-        }
     }
 
     @Before
@@ -91,6 +88,7 @@ public class UsageUnitTest {
                 .from(SAMPLE_XML)
                 .withTransform(new SampleTransformer())
                 .withParser(parser)
+                .onNodes(XML_PATH)
                 .create();
 
         List<Sample> samples = Lists.newArrayList(xitr);
@@ -120,6 +118,7 @@ public class UsageUnitTest {
                 .from(sampleXML)
                 .withTransform(new SampleTransformer())
                 .withParser(parser)
+                .onNodes("n1/l2/i1")
                 .create();
 
         List<Sample> samples = Lists.newArrayList(xitr);
@@ -134,6 +133,7 @@ public class UsageUnitTest {
                 .from("")
                 .withTransform(new SampleTransformer())
                 .withParser(parser)
+                .onNodes("n1/l2/i1")
                 .create();
 
         assertTrue("Iterable is empty.", !xitr.iterator().hasNext());

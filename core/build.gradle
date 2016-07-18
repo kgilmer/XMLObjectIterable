@@ -12,10 +12,13 @@ dependencies {
     compile 'xmlpull:xmlpull:1.1.3.1'
     compile 'org.ogce:xpp3:1.1.6'
     compile 'com.google.guava:guava:19.0'
+
+    jmh 'org.openjdk.jmh:jmh-core'
+    jmh 'org.openjdk.jmh:jmh-generator-bytecode'
 }
 
 jmh {
-    include = 'benchmarks\\.HelloWorld'
+    include = 'benchmarks\\.ParsingTransformBenchmarks'
     duplicateClassesStrategy = 'warn'
 }
 

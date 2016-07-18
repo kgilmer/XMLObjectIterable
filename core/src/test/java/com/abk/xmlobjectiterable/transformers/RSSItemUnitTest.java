@@ -38,6 +38,7 @@ public class RSSItemUnitTest {
         XMLObjectIterable<RSSItem> xitr = new XMLObjectIterable.Builder<RSSItem>()
                 .from(is)
                 .withTransform(RSSItem.RSS_TRANSFORMER)
+                .onNodes(RSSItem.RSS_PATH)
                 .withParser(parser)
                 .create();
 

@@ -80,10 +80,5 @@ public class RSSBookmarkItem {
         public void reset() {
             item = null;
         }
-
-        @Override
-        public String getPath() {
-            return PATH;
-        }
     };
 }

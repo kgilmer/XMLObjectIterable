@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
                     .from(XML)
                     .withParser(getParser())
                     .withTransform(new BirdTransformer())
+                    .onNodes("/a/b")
                     .create();
 
             List<Bird> birdList = new ArrayList<>();
@@ -77,11 +78,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void reset() {
             name = null;
-        }
-
-        @Override
-        public String getPath() {
-            return "/a/b";
         }
     }
 
