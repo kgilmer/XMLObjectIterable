@@ -20,6 +20,7 @@ This library is designed for one use case: retrieving lists of XML elements as P
 ```java
 XMLObjectIterable<Sample> xitr = new XMLObjectIterable.Builder<Sample>()
   .from(SAMPLE_XML)
+  .onNodes("n1/l2/i1")
   .withTransform(new SampleTransformer())
   .withParser(parser)
   .create();
@@ -54,11 +55,6 @@ class SampleTransformer implements XMLObjectIterable.Transformer<Sample> {
     @Override
     public void reset() {
         val = null;
-    }
-
-    @Override
-    public String getPath() {
-        return "n1/l2/i1";
     }
 }
 ```
