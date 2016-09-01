@@ -70,12 +70,7 @@ public class RSSItem {
 
         @Override
         public Optional<RSSItem> transform() {
-            if (description != null
-                    && comments != null
-                    && pubDate != null
-                    && link != null
-                    && title != null) {
-
+            if (canTransform()) {
                 return Optional.of(new RSSItem(title, link, pubDate, comments, description));
             }
 
@@ -83,22 +78,22 @@ public class RSSItem {
         }
 
         @Override
-        public void visit(String name, String value, Map<String, String> attribs) {
-            switch (name) {
+        public void visit(XMLObjectIterable.XmlNodeValue val) {
+            switch (val.getName()) {
                 case "title":
-                    this.title = value;
+                    this.title = val.getValue();
                     break;
                 case "link":
-                    this.link = value;
+                    this.link = val.getValue();
                     break;
                 case "pubDate":
-                    this.pubDate = value;
+                    this.pubDate = val.getValue();
                     break;
                 case "comments":
-                    this.comments = value;
+                    this.comments = val.getValue();
                     break;
                 case "description":
-                    this.description = value;
+                    this.description = val.getValue();
                     break;
             }
         }
@@ -110,6 +105,15 @@ public class RSSItem {
             pubDate = null;
             comments = null;
             description = null;
+        }
+
+        @Override
+        public boolean canTransform() {
+            return description != null
+                    && comments != null
+                    && pubDate != null
+                    && link != null
+                    && title != null;
         }
     };
 }

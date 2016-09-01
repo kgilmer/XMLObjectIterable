@@ -62,15 +62,20 @@ public class UsageUnitTest {
         }
 
         @Override
-        public void visit(String name, String value, Map<String, String> attribs) {
-            if (!Strings.isNullOrEmpty(value)) {
-                val = value;
+        public void visit(XMLObjectIterable.XmlNodeValue xmlNodeValue) {
+            if (!Strings.isNullOrEmpty(xmlNodeValue.getValue())) {
+                val = xmlNodeValue.getValue();
             }
         }
 
         @Override
         public void reset() {
             val = null;
+        }
+
+        @Override
+        public boolean canTransform() {
+            return !Strings.isNullOrEmpty(val);
         }
     }
 

@@ -1,10 +1,7 @@
 package com.abk.xmlobjectiterable;
 
-//import android.util.Xml;
-
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.io.Closeables;
 import org.xmlpull.v1.XmlPullParser;
@@ -17,7 +14,7 @@ import java.util.*;
 
 /**
  * Transform and iterate over XML elements as POJOs.
- *
+ * <p/>
  * See http://github.com/kgilmer/XMLObjectIterable for details.
  */
 public final class XMLObjectIterable<T> implements Iterable<T> {
@@ -44,70 +41,60 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
          * before transform() is called, depending
          * on the XML structure.
          *
-         * @param name    xml element name
-         * @param value   xml element value
-         * @param attribs map of xml attributes
+         * @param node    XmlNodeValue
          */
-        void visit(String name, String value, Map<String, String> attribs);
+        void visit(XmlNodeValue node);
 
         /**
          * Called after transform, signals that POJO generation should be
          * reset for next element.
          */
         void reset();
-    }
-
-    /**
-     * Captures mutable state during XML stream scanning.
-     */
-    public static class XmlTraversalState {
-        private int event;
-        private String lastNodeName;
-        private Map<String, String> lastNodeAttribs;
-
-        public XmlTraversalState(int event, String lastNodeName, Map<String, String> lastNodeAttribs) {
-            this.event = event;
-            this.lastNodeName = lastNodeName;
-            this.lastNodeAttribs = lastNodeAttribs;
-        }
-    }
-
-    /**
-     * Determines if a given XML event should be considered
-     * for transformation into a POJO and subsequently passed
-     * back to the client as data.
-     *
-     * This implementation only evaluates node names and depth.
-     */
-    private final class XmlPathNodeEvaluator implements Predicate<XmlTraversalState> {
-        private static final String PATH_SEPARATOR = "/";
-        private final List<String> xmlPath;
-        private final List<String> nodeStack;
 
         /**
-         * @param xPath example "node1/node2/"
+         *
+         * @return true if all required data has been loaded via Transformer.visit().
          */
-        public XmlPathNodeEvaluator(String xPath) {
-            this.xmlPath = Splitter
-                    .on(PATH_SEPARATOR)
-                    .omitEmptyStrings()
-                    .trimResults()
-                    .splitToList(xPath);
-            this.nodeStack = new ArrayList<>(xmlPath.size());
+        boolean canTransform();
+    }
+
+    /**
+     * Captures the local data of a given node.
+     */
+    public static class XmlNodeValue {
+        private final String name;
+        private String value;
+        private final Map<String, String> attribs;
+
+        public XmlNodeValue(String name, String value, Map<String, String> attribs) {
+            this.name = name;
+            this.value = value;
+            this.attribs = attribs;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public Map<String, String> getAttribs() {
+            return attribs;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
         }
 
         @Override
-        public boolean apply(XmlTraversalState input) {
-            switch (input.event) {
-                case XmlPullParser.START_TAG:
-                    nodeStack.add(parser.getName());
-                    break;
-                case XmlPullParser.END_TAG:
-                    nodeStack.remove(nodeStack.size() - 1);
-                    break;
-            }
-
-            return nodeStack.hashCode() == xmlPath.hashCode();
+        public String toString() {
+            return "XmlNodeValue{" +
+                    "name='" + name + '\'' +
+                    ", value='" + value + '\'' +
+                    ", attribs=" + attribs +
+                    '}';
         }
     }
 
@@ -120,8 +107,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
         private InputStream is;
         private Transformer<T> transformer;
         private XmlPullParser pullParser;
-        private String xmlPath;
-        private Predicate<XmlTraversalState> transformPredicate;
+        private List<String> rootNodePath;
 
         /**
          * Read XML from an InputStream.
@@ -138,19 +124,27 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
         }
 
         public Builder<T> onNodes(String xmlPath) {
-            if (transformPredicate != null) {
+            if (rootNodePath != null) {
                 throw new RuntimeException("Must specify only one xml path or transform predicate.");
             }
-            this.xmlPath = xmlPath;
+            this.rootNodePath = Splitter
+                    .on('/')
+                    .omitEmptyStrings()
+                    .trimResults()
+                    .splitToList(xmlPath);
             return this;
         }
 
-        public Builder<T> transformPredicate(Predicate<XmlTraversalState> predicate) {
-            if (xmlPath != null) {
+        /**
+         * @param path list of xml elements which define root of node to transform.
+         * @return Builder
+         */
+        public Builder<T> onNodes(List<String> path) {
+            if (rootNodePath != null) {
                 throw new RuntimeException("Must specify only one xml path or transform predicate.");
             }
 
-            this.transformPredicate = predicate;
+            this.rootNodePath = path;
             return this;
         }
 
@@ -158,7 +152,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
          * Read XML from a String.
          * <p/>
          * One call to from() is required.
-         *
+         * <p/>
          * NOTE: This data will be ignored if
          * parser passed already has input set.
          *
@@ -175,7 +169,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
          * Read XML from a classloader.
          * <p/>
          * One call to from() is required.
-         *
+         * <p/>
          * NOTE: This data will be ignored if
          * parser passed already has input set.
          *
@@ -185,7 +179,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
          */
         public Builder<T> from(final Class<?> clazz, final String resourcePath) {
             this.is = clazz.getResourceAsStream(resourcePath);
-            Preconditions.checkNotNull(this.is, "InputStream cannot be null.");
+            Preconditions.checkNotNull(this.is, "Failed to load resource: " + resourcePath);
             return this;
         }
 
@@ -194,7 +188,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
          * POJOs for each matched path element.
          * <p/>
          * Required
-         *
+         * <p/>
          * NOTE: This data will be ignored if
          * parser passed already has input set.
          *
@@ -217,7 +211,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
             Preconditions.checkNotNull(transformer, "Must call withTransform() on builder.");
             Preconditions.checkNotNull(pullParser, "Must set a XmlPullParser instance.");
 
-            return new XMLObjectIterable<>(pullParser, is, transformer, transformPredicate, xmlPath);
+            return new XMLObjectIterable<>(pullParser, is, transformer, rootNodePath);
         }
 
         public Builder<T> withParser(final XmlPullParser parser) {
@@ -233,33 +227,29 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
      */
     private static final class PullParserIterable<T> implements Iterable<T> {
 
-        private static final XmlTraversalState END_NODE_STATE =
-                new XmlTraversalState(XmlPullParser.END_TAG, null, null);
-
-        /**
-         * PullParser can scan for the next valid node
-         * based on xmlPath or create a POJO if parsing
-         * nodes that are part of the POJO.
-         */
-        private static final int SCAN_MODE = 1;
-        private static final int LOAD_MODE = 2;
+        private static final int DEPTH_OUTSIDE = 0;
+        private static final int DEPTH_AT_ROOT = 1;
+        private static final int DEPTH_INSIDE = 2;
 
         private final XmlPullParser parser;
         private final InputStream inputStream;
-        private final Predicate<XmlTraversalState> parsePredicate;
+        //private final Predicate<XmlTraversalState> parsePredicate;
         private final Transformer<T> transformer;
-        private int traversalMode = SCAN_MODE;
+        private final List<String> rootNodePath;
+        private Deque<XmlNodeValue> nodeValueStack = new LinkedList<>();
+        private Deque<String> nodeNameStack = new LinkedList<>();
 
         /**
          * @param parser         pull parser initialized with input.
          * @param is             inputStream of XML
-         * @param parsePredicate Predicate to determine of transformer shall be called on given node
+         * @param rootNodePath   Predicate to determine of transformer shall be called on given node
          * @param transformer    instance of a transformer that generates the POJOs.
          */
-        public PullParserIterable(final XmlPullParser parser, final InputStream is, final Predicate<XmlTraversalState> parsePredicate, final Transformer<T> transformer) {
+        public PullParserIterable(final XmlPullParser parser, final InputStream is, final List<String> rootNodePath, final Transformer<T> transformer) {
             this.parser = parser;
             this.inputStream = is;
-            this.parsePredicate = parsePredicate;
+            //this.parsePredicate = parsePredicate;
+            this.rootNodePath = rootNodePath;
             this.transformer = transformer;
         }
 
@@ -325,72 +315,45 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
                 /**
                  * Parse the input XML and create a POJO
                  * when the next xmlPath element is found.
+                 *
                  * @return optional POJO
                  */
                 private Optional<T> getNext() {
                     int nextTokenType;
-                    int nestLevel = 0;
-                    String lastNodeName = null;
-                    String lastNodeText = null;
-                    final Map<String, String> lastNodeAttribs = new HashMap<>();
-                    XmlTraversalState xts = new XmlTraversalState(-1, null, null);
 
                     try {
                         while ((nextTokenType = parser.next()) != XmlPullParser.END_DOCUMENT) {
-                            if (traversalMode == SCAN_MODE) {
-                                xts.event = nextTokenType;
-                                switch (nextTokenType) {
-                                    case XmlPullParser.START_TAG:
-                                        lastNodeName = parser.getName();
-                                        loadAttribs(parser, lastNodeAttribs);
-                                        break;
-                                    case XmlPullParser.END_TAG:
-                                        lastNodeAttribs.clear();
-                                        break;
-                                }
+                            switch (nextTokenType) {
+                                case XmlPullParser.START_TAG:
+                                    nodeNameStack.addLast(parser.getName());
+                                    nodeValueStack.addLast(new XmlNodeValue(parser.getName(), null, loadAttribs(parser)));
+                                    break;
+                                case XmlPullParser.TEXT:
+                                    nodeValueStack.peekLast().setValue(parser.getText());
+                                    break;
+                                case XmlPullParser.END_TAG:
+                                    final int depth = getNodeDepth(rootNodePath, nodeNameStack);
+                                    nodeNameStack.removeLast();
+                                    final XmlNodeValue lastNode = nodeValueStack.removeLast();
 
-                                xts.lastNodeAttribs = lastNodeAttribs;
-                                xts.lastNodeName = lastNodeName;
-                                if (parsePredicate.apply(xts)) {
-                                    traversalMode = LOAD_MODE;
-                                    nestLevel++;
-                                }
-                            } else {
-                                switch (nextTokenType) {
-                                    case XmlPullParser.START_TAG:
-                                        lastNodeName = parser.getName();
-                                        loadAttribs(parser, lastNodeAttribs);
-                                        nestLevel++;
-                                        break;
-                                    case XmlPullParser.TEXT:
-                                        lastNodeText = parser.getText();
-                                        break;
-                                    case XmlPullParser.END_TAG:
-                                        if (lastNodeName != null) {
-                                            transformer.visit(lastNodeName, lastNodeText, lastNodeAttribs);
-                                        }
-                                        nestLevel--;
-                                        lastNodeName = null;
-                                        lastNodeText = null;
-                                        lastNodeAttribs.clear();
-                                        break;
-                                }
+                                    switch (depth) {
+                                        case DEPTH_AT_ROOT:
+                                            transformer.visit(lastNode);
+                                            if (transformer.canTransform()) {
+                                                final Optional<T> val = transformer.transform();
+                                                transformer.reset();
 
-                                if (nestLevel == 0) {
-                                    //Returned to the root of the XPATH, should be
-                                    //able to construct the POJO
-                                    traversalMode = SCAN_MODE;
-                                    //Cause the xml path to remove the last element
-                                    //Signal to the predicate that an element has been
-                                    //retrieved.
-                                    parsePredicate.apply(END_NODE_STATE);
-
-                                    final Optional<T> val = transformer.transform();
-                                    transformer.reset();
-
-                                    return val;
-                                }
+                                                return val;
+                                            }
+                                            break;
+                                        case DEPTH_INSIDE:
+                                            transformer.visit(lastNode);
+                                            break;
+                                        default:
+                                            break;
+                                    }
                             }
+
                         }
                     } catch (XmlPullParserException | IOException e) {
                         throw new RuntimeException("Error while parsing XML.", e);
@@ -406,33 +369,45 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
             };
         }
 
+        private int getNodeDepth(List<String> rootNodePath, Deque<String> nodeNameStack) {
+            if (nodeNameStack.size() < rootNodePath.size()) {
+                return DEPTH_OUTSIDE;
+            }
+
+            if (nodeNameStack.hashCode() == rootNodePath.hashCode()) {
+                return DEPTH_AT_ROOT;
+            }
+
+            return DEPTH_INSIDE;
+        }
+
         /**
          * Load an XML element's attributes into a map
          *
          * @param parser          parser at node start
-         * @param lastNodeAttribs map of attribs.
+         * @return map of attribs.
          */
-        private static void loadAttribs(final XmlPullParser parser, final Map<String, String> lastNodeAttribs) {
+        private static Map<String, String> loadAttribs(final XmlPullParser parser) {
+            Map<String, String> attribs = new HashMap<>();
             final int attribCount = parser.getAttributeCount();
 
             for (int index = 0; index < attribCount; ++index) {
-                lastNodeAttribs.put(parser.getAttributeName(index), parser.getAttributeValue(index));
+                attribs.put(parser.getAttributeName(index), parser.getAttributeValue(index));
             }
+            return attribs;
         }
     }
 
     private final Transformer<T> transformer;
-    private Predicate<XmlTraversalState> transformPredicate;
     private final InputStream is;
     private final XmlPullParser parser;
-    private String xmlPath;
+    private List<String> rootNodePath;
 
-    private XMLObjectIterable(final XmlPullParser pullParser, final InputStream is, final Transformer<T> transformer, final Predicate<XmlTraversalState> transformPredicate, String xmlPath) {
+    private XMLObjectIterable(final XmlPullParser pullParser, final InputStream is, final Transformer<T> transformer, final List<String> rootNodePath) {
         this.is = is;
         this.transformer = transformer;
-        this.transformPredicate = transformPredicate;
         this.parser = pullParser;
-        this.xmlPath = xmlPath;
+        this.rootNodePath = rootNodePath;
     }
 
     @Override
@@ -446,16 +421,8 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
             }
         }
 
-        // If transformPredicate was not specified in the builder use
-        // the default XML node path predicate.
-        if (transformPredicate == null && xmlPath != null) {
-            transformPredicate = new XmlPathNodeEvaluator(xmlPath);
-        } else if (transformPredicate == null) {
-            throw new RuntimeException("Must specify XML path or transform predicate in builder.");
-        }
-
         final PullParserIterable<T> iterable =
-                new PullParserIterable<T>(parser, is, transformPredicate, transformer);
+                new PullParserIterable<>(parser, is, rootNodePath, transformer);
 
         return iterable.iterator();
     }

@@ -1,6 +1,7 @@
 package com.abk.xmlobjectiterable.core;
 
 import com.abk.xmlobjectiterable.XMLObjectIterable;
+import com.google.common.collect.Lists;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -69,6 +70,8 @@ public class ConstructionTest {
                 .withTransform(new UsageUnitTest.SampleTransformer())
                 .create();
 
-        assertTrue("Iterable returns at least one element.", xmlItr.iterator().hasNext());
+        List<UsageUnitTest.Sample> elements = Lists.newArrayList(xmlItr);
+
+        assertTrue("Iterable returns at least one element.", !elements.isEmpty());
     }
 }

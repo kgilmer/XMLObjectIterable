@@ -66,19 +66,24 @@ public class RSSBookmarkItem {
         }
 
         @Override
-        public void visit(String name, String value, Map<String, String> attribs) {
-            if (name.equals("outline") && attribs.containsKey("xmlUrl") && item == null) {
+        public void visit(XMLObjectIterable.XmlNodeValue value) {
+            if (value.getName().equals("outline") && value.getAttribs().containsKey("xmlUrl") && item == null) {
                 item = new RSSBookmarkItem(
-                        attribs.get("title"),
-                        attribs.get("htmlUrl"),
-                        attribs.get("type"),
-                        attribs.get("xmlUrl"));
+                        value.getAttribs().get("title"),
+                        value.getAttribs().get("htmlUrl"),
+                        value.getAttribs().get("type"),
+                        value.getAttribs().get("xmlUrl"));
             }
         }
 
         @Override
         public void reset() {
             item = null;
+        }
+
+        @Override
+        public boolean canTransform() {
+            return item != null;
         }
     };
 }

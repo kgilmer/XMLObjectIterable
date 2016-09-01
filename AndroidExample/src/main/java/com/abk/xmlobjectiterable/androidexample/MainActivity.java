@@ -11,7 +11,6 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -67,17 +66,22 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void visit(String name, String value, Map<String, String> attribs) {
+        public void visit(XMLObjectIterable.XmlNodeValue xmlNodeValue) {
             if (name == null) {
                 throw new IllegalStateException("Unexpected duplicate name.");
             }
 
-            this.name = value;
+            this.name = xmlNodeValue.getValue();
         }
 
         @Override
         public void reset() {
             name = null;
+        }
+
+        @Override
+        public boolean canTransform() {
+            return name != null;
         }
     }
 
