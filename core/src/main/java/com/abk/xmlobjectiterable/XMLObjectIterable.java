@@ -20,92 +20,13 @@ import java.util.*;
 public final class XMLObjectIterable<T> implements Iterable<T> {
 
     /**
-     * Implementations act on XML traversals in visit() to generate
-     * POJOs via transform().
-     *
-     * @param <T> type of POJO
-     */
-    public interface Transformer<T> {
-
-        /**
-         * @return instance of POJO or absent of
-         * required data not available.
-         */
-        Optional<T> transform();
-
-        /**
-         * Callback to populate POJO with
-         * values from XML element.
-         * <p/>
-         * This method may be called multiple times
-         * before transform() is called, depending
-         * on the XML structure.
-         *
-         * @param node    XmlNodeValue
-         */
-        void visit(XmlNodeValue node);
-
-        /**
-         * Called after transform, signals that POJO generation should be
-         * reset for next element.
-         */
-        void reset();
-
-        /**
-         *
-         * @return true if all required data has been loaded via Transformer.visit().
-         */
-        boolean canTransform();
-    }
-
-    /**
-     * Captures the local data of a given node.
-     */
-    public static class XmlNodeValue {
-        private final String name;
-        private String value;
-        private final Map<String, String> attribs;
-
-        public XmlNodeValue(String name, String value, Map<String, String> attribs) {
-            this.name = name;
-            this.value = value;
-            this.attribs = attribs;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        public Map<String, String> getAttribs() {
-            return attribs;
-        }
-
-        public void setValue(String value) {
-            this.value = value;
-        }
-
-        @Override
-        public String toString() {
-            return "XmlNodeValue{" +
-                    "name='" + name + '\'' +
-                    ", value='" + value + '\'' +
-                    ", attribs=" + attribs +
-                    '}';
-        }
-    }
-
-    /**
      * Builder for the XMLObjectIterable
      *
      * @param <T> type of POJO
      */
     public static final class Builder<T> {
         private InputStream is;
-        private Transformer<T> transformer;
+        private XMLTransformer<T> transformer;
         private XmlPullParser pullParser;
         private List<String> rootNodePath;
 
@@ -195,7 +116,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
          * @param transformer Transformer instance
          * @return builder
          */
-        public Builder<T> withTransform(final Transformer<T> transformer) {
+        public Builder<T> withTransform(final XMLTransformer<T> transformer) {
             this.transformer = transformer;
             return this;
         }
@@ -233,10 +154,9 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
 
         private final XmlPullParser parser;
         private final InputStream inputStream;
-        //private final Predicate<XmlTraversalState> parsePredicate;
-        private final Transformer<T> transformer;
+        private final XMLTransformer<T> transformer;
         private final List<String> rootNodePath;
-        private Deque<XmlNodeValue> nodeValueStack = new LinkedList<>();
+        private Deque<XMLElement> nodeValueStack = new LinkedList<>();
         private Deque<String> nodeNameStack = new LinkedList<>();
 
         /**
@@ -245,10 +165,9 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
          * @param rootNodePath   Predicate to determine of transformer shall be called on given node
          * @param transformer    instance of a transformer that generates the POJOs.
          */
-        public PullParserIterable(final XmlPullParser parser, final InputStream is, final List<String> rootNodePath, final Transformer<T> transformer) {
+        public PullParserIterable(final XmlPullParser parser, final InputStream is, final List<String> rootNodePath, final XMLTransformer<T> transformer) {
             this.parser = parser;
             this.inputStream = is;
-            //this.parsePredicate = parsePredicate;
             this.rootNodePath = rootNodePath;
             this.transformer = transformer;
         }
@@ -326,7 +245,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
                             switch (nextTokenType) {
                                 case XmlPullParser.START_TAG:
                                     nodeNameStack.addLast(parser.getName());
-                                    nodeValueStack.addLast(new XmlNodeValue(parser.getName(), null, loadAttribs(parser)));
+                                    nodeValueStack.addLast(new XMLElement(parser.getName(), null, loadAttribs(parser)));
                                     break;
                                 case XmlPullParser.TEXT:
                                     nodeValueStack.peekLast().setValue(parser.getText());
@@ -334,7 +253,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
                                 case XmlPullParser.END_TAG:
                                     final int depth = getNodeDepth(rootNodePath, nodeNameStack);
                                     nodeNameStack.removeLast();
-                                    final XmlNodeValue lastNode = nodeValueStack.removeLast();
+                                    final XMLElement lastNode = nodeValueStack.removeLast();
 
                                     switch (depth) {
                                         case DEPTH_AT_ROOT:
@@ -398,12 +317,12 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
         }
     }
 
-    private final Transformer<T> transformer;
+    private final XMLTransformer<T> transformer;
     private final InputStream is;
     private final XmlPullParser parser;
     private List<String> rootNodePath;
 
-    private XMLObjectIterable(final XmlPullParser pullParser, final InputStream is, final Transformer<T> transformer, final List<String> rootNodePath) {
+    private XMLObjectIterable(final XmlPullParser pullParser, final InputStream is, final XMLTransformer<T> transformer, final List<String> rootNodePath) {
         this.is = is;
         this.transformer = transformer;
         this.parser = pullParser;

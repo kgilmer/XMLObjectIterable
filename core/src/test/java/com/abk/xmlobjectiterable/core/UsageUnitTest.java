@@ -1,6 +1,8 @@
 package com.abk.xmlobjectiterable.core;
 
 import com.abk.xmlobjectiterable.XMLObjectIterable;
+import com.abk.xmlobjectiterable.XMLElement;
+import com.abk.xmlobjectiterable.XMLTransformer;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -11,7 +13,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -48,7 +49,7 @@ public class UsageUnitTest {
         }
     }
 
-    public static class SampleTransformer implements XMLObjectIterable.Transformer<Sample> {
+    public static class SampleTransformer implements XMLTransformer<Sample> {
 
         private String val;
 
@@ -62,7 +63,7 @@ public class UsageUnitTest {
         }
 
         @Override
-        public void visit(XMLObjectIterable.XmlNodeValue xmlNodeValue) {
+        public void visit(XMLElement xmlNodeValue) {
             if (!Strings.isNullOrEmpty(xmlNodeValue.getValue())) {
                 val = xmlNodeValue.getValue();
             }

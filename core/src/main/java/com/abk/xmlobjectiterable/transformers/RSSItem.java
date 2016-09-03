@@ -1,9 +1,8 @@
 package com.abk.xmlobjectiterable.transformers;
 
-import com.abk.xmlobjectiterable.XMLObjectIterable;
+import com.abk.xmlobjectiterable.XMLElement;
+import com.abk.xmlobjectiterable.XMLTransformer;
 import com.google.common.base.Optional;
-
-import java.util.Map;
 
 /**
  * RSS Feed Items
@@ -61,7 +60,7 @@ public class RSSItem {
         return title;
     }
 
-    public static final XMLObjectIterable.Transformer<RSSItem> RSS_TRANSFORMER = new XMLObjectIterable.Transformer<RSSItem>() {
+    public static final XMLTransformer<RSSItem> RSS_TRANSFORMER = new XMLTransformer<RSSItem>() {
         private String description;
         private String comments;
         private String pubDate;
@@ -78,7 +77,7 @@ public class RSSItem {
         }
 
         @Override
-        public void visit(XMLObjectIterable.XmlNodeValue val) {
+        public void visit(XMLElement val) {
             switch (val.getName()) {
                 case "title":
                     this.title = val.getValue();

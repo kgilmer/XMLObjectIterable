@@ -5,6 +5,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Xml;
 import android.widget.TextView;
 import com.abk.xmlobjectiterable.XMLObjectIterable;
+import com.abk.xmlobjectiterable.XMLElement;
+import com.abk.xmlobjectiterable.XMLTransformer;
 import com.google.common.base.Optional;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -52,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
         return parser;
     }
 
-    public static class BirdTransformer implements XMLObjectIterable.Transformer<Bird> {
+    public static class BirdTransformer implements XMLTransformer<Bird> {
 
         private String name;
 
@@ -66,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void visit(XMLObjectIterable.XmlNodeValue xmlNodeValue) {
+        public void visit(XMLElement xmlNodeValue) {
             if (name == null) {
                 throw new IllegalStateException("Unexpected duplicate name.");
             }

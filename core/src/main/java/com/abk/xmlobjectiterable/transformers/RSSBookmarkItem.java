@@ -1,9 +1,8 @@
 package com.abk.xmlobjectiterable.transformers;
 
-import com.abk.xmlobjectiterable.XMLObjectIterable;
+import com.abk.xmlobjectiterable.XMLElement;
+import com.abk.xmlobjectiterable.XMLTransformer;
 import com.google.common.base.Optional;
-
-import java.util.Map;
 
 /**
  * RSS OPML
@@ -57,7 +56,7 @@ public class RSSBookmarkItem {
         return title;
     }
 
-    public static final XMLObjectIterable.Transformer<RSSBookmarkItem> TRANSFORMER = new XMLObjectIterable.Transformer<RSSBookmarkItem>() {
+    public static final XMLTransformer<RSSBookmarkItem> TRANSFORMER = new XMLTransformer<RSSBookmarkItem>() {
         public RSSBookmarkItem item;
 
         @Override
@@ -66,7 +65,7 @@ public class RSSBookmarkItem {
         }
 
         @Override
-        public void visit(XMLObjectIterable.XmlNodeValue value) {
+        public void visit(XMLElement value) {
             if (value.getName().equals("outline") && value.getAttribs().containsKey("xmlUrl") && item == null) {
                 item = new RSSBookmarkItem(
                         value.getAttribs().get("title"),

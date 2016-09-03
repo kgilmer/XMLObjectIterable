@@ -1,6 +1,7 @@
 package com.abk.xmlobjectiterable.transformers;
 
-import com.abk.xmlobjectiterable.XMLObjectIterable;
+import com.abk.xmlobjectiterable.XMLElement;
+import com.abk.xmlobjectiterable.XMLTransformer;
 import com.abk.xmlobjectiterable.model.Book;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -13,7 +14,7 @@ import java.util.Map;
 /**
  * Created by kgilmer on 8/14/16.
  */
-public class BookTransformer implements XMLObjectIterable.Transformer<Book> {
+public class BookTransformer implements XMLTransformer<Book> {
     private String category;
     private String title;
     private List<String> authors = new ArrayList<>();
@@ -44,7 +45,7 @@ public class BookTransformer implements XMLObjectIterable.Transformer<Book> {
     }
 
     @Override
-    public void visit(XMLObjectIterable.XmlNodeValue xmlNodeValue) {
+    public void visit(XMLElement xmlNodeValue) {
         final String name = xmlNodeValue.getName();
         final String value = xmlNodeValue.getValue();
         final Map<String, String> attribs = xmlNodeValue.getAttribs();
