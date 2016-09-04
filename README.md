@@ -79,6 +79,11 @@ dependencies {
 
 # Release Notes #
 
+## Release 0.9.0 ##
+
+- Major refactoring and simplification of internals.
+- Additional tests and examples.
+
 ## Release 0.8.0 ##
 
 - Added JMH benchmarking data.
@@ -87,6 +92,15 @@ dependencies {
 - Misc cleanup.
 
 ### Benchmark Results ###
+
+### 0.9.0 ***
+
+```
+Benchmark                                     Mode  Cnt    Score    Error  Units
+ParsingTransformBenchmarks.testReadRSSItems  thrpt  200  806.297 ± 17.739  ops/s
+```
+
+#### 0.7.0 ###
 
 ```
 Benchmark                                     Mode  Cnt    Score    Error  Units
