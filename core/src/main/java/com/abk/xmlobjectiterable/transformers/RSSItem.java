@@ -4,6 +4,8 @@ import com.abk.xmlobjectiterable.XMLElement;
 import com.abk.xmlobjectiterable.XMLTransformer;
 import com.google.common.base.Optional;
 
+import java.util.List;
+
 /**
  * RSS Feed Items
  * <p/>
@@ -77,7 +79,7 @@ public class RSSItem {
         }
 
         @Override
-        public void visit(XMLElement val) {
+        public void visit(XMLElement val, List<String> path) {
             switch (val.getName()) {
                 case "title":
                     this.title = val.getValue();

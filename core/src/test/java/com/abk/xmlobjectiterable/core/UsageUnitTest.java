@@ -63,7 +63,7 @@ public class UsageUnitTest {
         }
 
         @Override
-        public void visit(XMLElement xmlNodeValue) {
+        public void visit(XMLElement xmlNodeValue, List<String> path) {
             if (!Strings.isNullOrEmpty(xmlNodeValue.getValue())) {
                 val = xmlNodeValue.getValue();
             }

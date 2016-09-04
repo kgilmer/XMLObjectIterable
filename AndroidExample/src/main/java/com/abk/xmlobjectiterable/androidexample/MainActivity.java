@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void visit(XMLElement xmlNodeValue) {
+        public void visit(XMLElement xmlNodeValue, List<String> path) {
             if (name == null) {
                 throw new IllegalStateException("Unexpected duplicate name.");
             }

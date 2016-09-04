@@ -157,7 +157,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
         private final XMLTransformer<T> transformer;
         private final List<String> rootNodePath;
         private Deque<XMLElement> nodeValueStack = new LinkedList<>();
-        private Deque<String> nodeNameStack = new LinkedList<>();
+        private List<String> nodeNameStack = new ArrayList<>();
 
         /**
          * @param parser         pull parser initialized with input.
@@ -244,7 +244,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
                         while ((nextTokenType = parser.next()) != XmlPullParser.END_DOCUMENT) {
                             switch (nextTokenType) {
                                 case XmlPullParser.START_TAG:
-                                    nodeNameStack.addLast(parser.getName());
+                                    nodeNameStack.add(parser.getName());
                                     nodeValueStack.addLast(new XMLElement(parser.getName(), null, loadAttribs(parser)));
                                     break;
                                 case XmlPullParser.TEXT:
@@ -252,12 +252,12 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
                                     break;
                                 case XmlPullParser.END_TAG:
                                     final int depth = getNodeDepth(rootNodePath, nodeNameStack);
-                                    nodeNameStack.removeLast();
                                     final XMLElement lastNode = nodeValueStack.removeLast();
 
                                     switch (depth) {
                                         case DEPTH_AT_ROOT:
-                                            transformer.visit(lastNode);
+                                            transformer.visit(lastNode, Collections.unmodifiableList(nodeNameStack));
+                                            nodeNameStack.remove(nodeNameStack.size() - 1);
                                             if (transformer.canTransform()) {
                                                 final Optional<T> val = transformer.transform();
                                                 transformer.reset();
@@ -266,9 +266,11 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
                                             }
                                             break;
                                         case DEPTH_INSIDE:
-                                            transformer.visit(lastNode);
+                                            transformer.visit(lastNode, Collections.unmodifiableList(nodeNameStack));
+                                            nodeNameStack.remove(nodeNameStack.size() - 1);
                                             break;
                                         default:
+                                            nodeNameStack.remove(nodeNameStack.size() - 1);
                                             break;
                                     }
                             }
@@ -288,7 +290,7 @@ public final class XMLObjectIterable<T> implements Iterable<T> {
             };
         }
 
-        private int getNodeDepth(List<String> rootNodePath, Deque<String> nodeNameStack) {
+        private int getNodeDepth(List<String> rootNodePath, List<String> nodeNameStack) {
             if (nodeNameStack.size() < rootNodePath.size()) {
                 return DEPTH_OUTSIDE;
             }

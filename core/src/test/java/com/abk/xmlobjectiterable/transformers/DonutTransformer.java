@@ -1,12 +1,12 @@
 package com.abk.xmlobjectiterable.transformers;
 
 import com.abk.xmlobjectiterable.XMLElement;
-import com.abk.xmlobjectiterable.XMLObjectIterable;
 import com.abk.xmlobjectiterable.XMLTransformer;
 import com.abk.xmlobjectiterable.model.Donut;
 import com.google.common.base.Optional;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -32,13 +32,13 @@ public class DonutTransformer implements XMLTransformer<Donut> {
     }
 
     @Override
-    public void visit(XMLElement node) {
+    public void visit(XMLElement node, List<String> path) {
         if (node.getName().equals("item")) {
             this.id = Integer.parseInt(node.getAttribs().get("id"));
             this.type = node.getAttribs().get("type");
         }
 
-        if (node.getName().equals("name")) {
+        if (node.getName().equals("name") && path.get(path.size() - 2).equals("item")) {
             this.name = node.getValue();
         }
 
@@ -68,14 +68,13 @@ public class DonutTransformer implements XMLTransformer<Donut> {
             currentFillingCost = null;
         }
 
-        if (node.getName().equals("name")) {
+        if (node.getName().equals("name") && path.get(path.size() - 2).equals("filling")) {
             currentFillingName = node.getValue();
         }
 
         if (node.getName().equals("addcost")) {
             currentFillingCost = Float.parseFloat(node.getValue());
         }
-
     }
 
     @Override

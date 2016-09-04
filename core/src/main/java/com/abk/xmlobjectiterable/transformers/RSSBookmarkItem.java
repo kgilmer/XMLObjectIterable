@@ -4,6 +4,8 @@ import com.abk.xmlobjectiterable.XMLElement;
 import com.abk.xmlobjectiterable.XMLTransformer;
 import com.google.common.base.Optional;
 
+import java.util.List;
+
 /**
  * RSS OPML
  *
@@ -65,7 +67,7 @@ public class RSSBookmarkItem {
         }
 
         @Override
-        public void visit(XMLElement value) {
+        public void visit(XMLElement value, List<String> path) {
             if (value.getName().equals("outline") && value.getAttribs().containsKey("xmlUrl") && item == null) {
                 item = new RSSBookmarkItem(
                         value.getAttribs().get("title"),

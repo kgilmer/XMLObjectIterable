@@ -45,7 +45,7 @@ public class BookTransformer implements XMLTransformer<Book> {
     }
 
     @Override
-    public void visit(XMLElement xmlNodeValue) {
+    public void visit(XMLElement xmlNodeValue, List<String> path) {
         final String name = xmlNodeValue.getName();
         final String value = xmlNodeValue.getValue();
         final Map<String, String> attribs = xmlNodeValue.getAttribs();

@@ -2,6 +2,8 @@ package com.abk.xmlobjectiterable;
 
 import com.google.common.base.Optional;
 
+import java.util.List;
+
 /**
  * Implementations act on XML traversals in visit() to generate
  * POJOs via transform().
@@ -25,8 +27,9 @@ public interface XMLTransformer<T> {
      * on the XML structure.
      *
      * @param node    XmlNodeValue
+     * @param path
      */
-    void visit(XMLElement node);
+    void visit(XMLElement node, List<String> path);
 
     /**
      * Called after transform, signals that POJO generation should be
