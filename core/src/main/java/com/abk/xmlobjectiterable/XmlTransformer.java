@@ -25,10 +25,9 @@ public interface XMLTransformer<T> {
      * This method may be called multiple times
      * before transform() is called, depending
      * on the XML structure.
-     *
-     * @param node    XmlNodeValue
-     * @param path
-     */
+     *  @param node    XmlNodeValue
+     * @param path node path
+     **/
     void visit(XMLElement node, List<String> path);
 
     /**

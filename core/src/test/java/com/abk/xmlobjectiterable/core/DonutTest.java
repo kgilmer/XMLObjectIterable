@@ -43,7 +43,7 @@ public class DonutTest {
         List<Donut> donutList = new ArrayList<>();
 
         Iterables.addAll(donutList, donutIterable);
-        assertTrue("4 donuts in XML", donutList.size() == 6);
+        assertTrue("6 donuts in XML", donutList.size() == 6);
         assertTrue("Names in order",
                 donutList.get(0).getName().equals("Cake")
                         && donutList.get(1).getName().equals("Raised")

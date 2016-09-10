@@ -38,7 +38,7 @@ public class DonutTransformer implements XMLTransformer<Donut> {
             this.type = node.getAttribs().get("type");
         }
 
-        if (node.getName().equals("name") && path.get(path.size() - 2).equals("item")) {
+        if (node.getName().equals("name") && !path.contains("filling")) {
             this.name = node.getValue();
         }
 
@@ -68,7 +68,7 @@ public class DonutTransformer implements XMLTransformer<Donut> {
             currentFillingCost = null;
         }
 
-        if (node.getName().equals("name") && path.get(path.size() - 2).equals("filling")) {
+        if (node.getName().equals("name") && path.contains("filling")) {
             currentFillingName = node.getValue();
         }
 
