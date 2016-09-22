@@ -10,6 +10,8 @@ Simplify XML parsing on Java and Android with this abstraction built on top of `
 
 This library is designed for one use case: transforming XML elements into POJOs as an `Iterable`.  There is no magic; you supply the path to top-level element needed and a type that creates POJO instances based on XML data as passed from an XmlPullParser.  The logic of extracting data from the stream of XML events is neatly encapsulated in a `XMLTransformer<>`.
 
+What's wrong with the XmlPullParser you ask? Well nothing, of course.  But writing parsers that key into the various events tends to produce messy, unmaintainable code.  XMLObjectIterable is in essence extracting what you'd be doing with those parse events into a discreet interface.
+
 ## Features ##
 
 - Space efficient: Creates POJOs as the XML stream is read. Exit without having to read entire stream.
