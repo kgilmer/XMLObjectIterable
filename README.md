@@ -195,16 +195,16 @@ dependencies {
 - Removed Android dependencies from core.
 - Created 'Android Example' module for Android usage.
 
-### Benchmark Results ###
+# Benchmark Results #
 
-### 0.9.0 ###
+## 0.9.0 ##
 
 ```
 Benchmark                                     Mode  Cnt    Score    Error  Units
 ParsingTransformBenchmarks.testReadRSSItems  thrpt  200  806.297 ± 17.739  ops/s
 ```
 
-#### 0.7.0 ###
+## 0.7.0 ##
 
 ```
 Benchmark                                     Mode  Cnt    Score    Error  Units
