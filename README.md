@@ -1,6 +1,6 @@
 # XMLObjectIterable
 
-[![Release](https://jitpack.io/v/kgilmer/XMLObjectIterable.svg)](https://jitpack.io/#kggilmer/XMLObjectIterable)
+[![Release](https://jitpack.io/v/kgilmer/XMLObjectIterable.svg)](https://jitpack.io/#kgilmer/XMLObjectIterable)
 
 <a href="http://www.methodscount.com/?lib=com.github.kgilmer%3AXMLObjectIterable%3A0.5"><img src="https://img.shields.io/badge/Methods and size-core: 75 | deps: 15076 | 11 KB-e91e63.svg"></img></a>
 
@@ -173,11 +173,14 @@ and:
 
 ```gradle
 dependencies {
-    compile 'com.github.kgilmer:XMLObjectIterable:0.9'
+    compile 'com.github.kgilmer:XMLObjectIterable:0.9.1'
 }
 ```
 
 # Release Notes #
+## Release 0.9.1 ##
+
+- Gradle version bump
 
 ## Release 0.9.0 ##
 
