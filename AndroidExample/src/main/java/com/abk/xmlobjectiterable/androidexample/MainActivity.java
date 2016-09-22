@@ -14,9 +14,13 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Takes some static XML as a String and generates Iterable of Bird and displays it in the activity.
+ */
 public class MainActivity extends AppCompatActivity {
 
-    private static final String XML = "<a><b>turkey</b><b>dove</b><b>rooster</b><c/></a>";
+    /** Source XML */
+    private static final String XML = "<birds><bird>turkey</bird><bird>dove</bird><bird>rooster</bird><somethingelse>turtle</somethingelse></birds>";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,18 +32,21 @@ public class MainActivity extends AppCompatActivity {
         }
 
         try {
-
+            //Entry-point into the API: produce an Iterable using the XMLTransformer.
             XMLObjectIterable<Bird> birds = new XMLObjectIterable.Builder<Bird>()
                     .from(XML)
                     .withParser(getParser())
                     .withTransform(new BirdTransformer())
-                    .onNodes("/a/b")
+                    .onNodes("/birds/bird")
                     .create();
 
+            //Load the Birds into a List
             List<Bird> birdList = new ArrayList<>();
             for (Bird b : birds) {
                 birdList.add(b);
             }
+
+            //Update the UI
             label.setText(birdList.toString());
 
         } catch (XmlPullParserException e) {
@@ -48,12 +55,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /** Get a parser */
     public XmlPullParser getParser() throws XmlPullParserException {
         final XmlPullParser parser = Xml.newPullParser();
         parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
         return parser;
     }
 
+    /** Transforms the XML into the Iterable */
     public static class BirdTransformer implements XMLTransformer<Bird> {
 
         private String name;
@@ -69,11 +78,9 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void visit(XMLElement xmlNodeValue, List<String> path) {
-            if (name == null) {
-                throw new IllegalStateException("Unexpected duplicate name.");
+            if (xmlNodeValue.getName().equals("bird")) {
+                this.name = xmlNodeValue.getValue();
             }
-
-            this.name = xmlNodeValue.getValue();
         }
 
         @Override
@@ -87,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /** Our model class for Bird */
     public static class Bird {
         private final String bird;
 
