@@ -14,7 +14,7 @@ What's wrong with the XmlPullParser you ask? Well nothing, of course.  But writi
 
 ## Features ##
 
-- Space efficient: Creates POJOs as the XML stream is read. Exit without having to read entire stream.
+- Efficient: Only parses input as Iterable is consumed. Exit or pause without having to read and parse what you don't need.
 - The transformer can also filter via API to avoid creating unneeded object instances.
 - Utilizes the built-in pull parser provided by Android or provide your own in Java.
 - Handle complex transformations by holding state in your `XMLTransformer` instances if necessary.
@@ -152,6 +152,10 @@ And with this implementation, we can provide an instance and some input XML to X
 ```
 
 And that's about it.  There are unit tests / examples for [RSS](https://github.com/kgilmer/XMLObjectIterable/blob/master/core/src/test/java/com/abk/xmlobjectiterable/transformers/RSSItemUnitTest.java) and Atom feeds as well as donuts.  Yep [donuts](https://github.com/kgilmer/XMLObjectIterable/blob/master/core/src/test/java/com/abk/xmlobjectiterable/transformers/DonutTransformer.java).  Also, have a look at the [XMLTransformer](https://github.com/kgilmer/XMLObjectIterable/blob/master/core/src/main/java/com/abk/xmlobjectiterable/XmlTransformer.java) interface to see what you're getting yourself into.  Finally, there is a very basic Android example [here](https://github.com/kgilmer/XMLObjectIterable/tree/master/AndroidExample).
+
+# When is `XMLObjectIterable` a bad fit?
+
+When constructing the `XMLObjectIterable` instance, the base node path is specified via the builder method `onNodes()`.  As the XML stream is parsed, the `XMLTransformer` is called at each node from this path and all of it's children.  In cases where the XML is particularly <i>deep but sparse</i> (you only need a small subset of the nodes), it is going to be more efficient to parse the tree directly with `XmlPullParser`.   This is because `XMLObjectIterable` keeps each nested XML element in a stack until a given POJO finishes parsing.  This can be done more efficiently by hand if some of these nested nodes can be ignored.
 
 # Get XMLObjectIterable into your Gradle project
 
