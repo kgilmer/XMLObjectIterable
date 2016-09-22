@@ -8,60 +8,153 @@ Simplify XML parsing on Java and Android with this abstraction built on top of `
 
 ## Overview ##
 
-This library is designed for one use case: retrieving lists of XML elements as POJOs in an `Iterable`.  There is no magic; you supply the path to root of the element needed and a type that creates POJO instances based on XML data as passed from an XmlPullParser.  The logic of extracting data from the stream of XML events is neatly encapsulated in a `XmlObjectIterable.Transformer<>`.
+This library is designed for one use case: transforming XML elements into POJOs as an `Iterable`.  There is no magic; you supply the path to top-level element needed and a type that creates POJO instances based on XML data as passed from an XmlPullParser.  The logic of extracting data from the stream of XML events is neatly encapsulated in a `XMLTransformer<>`.
 
 ## Features ##
-- Single file
-- Memory efficient: Creates POJOs as the XML stream is read. Exit without having to read entire stream.
-- The transformer can also filter via API to avoid parsing unneeded elements.
-- Utilizes the built-in pull parser provided by Android.
+
+- Space efficient: Creates POJOs as the XML stream is read. Exit without having to read entire stream.
+- The transformer can also filter via API to avoid creating unneeded object instances.
+- Utilizes the built-in pull parser provided by Android or provide your own in Java.
+- Handle complex transformations by holding state in your `XMLTransformer` instances if necessary.
+- XML transformers are easily testable in isolation.
+- Small API surface area: `XMLObjectIterable.Builder` and `XMLTransformer`.
 
 ## Usage Example ##
-```java
-XMLObjectIterable<Sample> xitr = new XMLObjectIterable.Builder<Sample>()
-  .from(SAMPLE_XML)
-  .onNodes("n1/l2/i1")
-  .withTransform(new SampleTransformer())
-  .withParser(parser)
-  .create();
 
-  for (Sample sample : xitr) {
-    // have fun with your POJO!
-  }
+Let's say you have some information about a library in an XML file:
+
+```xml
+<bookstore>
+    <book category="COOKING">
+        <title lang="en">Everyday Italian</title>
+        <author>Giada De Laurentiis</author>
+        <year>2005</year>
+        <price>30.00</price>
+    </book>
+    <book category="CHILDREN">
+        <title lang="en">Harry Potter</title>
+        <author>J K. Rowling</author>
+        <year>2005</year>
+        <price>29.99</price>
+    </book>
+    <book category="WEB">
+        <title lang="en">XQuery Kick Start</title>
+        <author>James McGovern</author>
+        <author>Per Bothner</author>
+        <author>Kurt Cagle</author>
+        <author>James Linn</author>
+        <author>Vaidyanathan Nagarajan</author>
+        <year>2003</year>
+        <price>49.99</price>
+    </book>
+    <book category="WEB">
+        <title lang="en">Learning XML</title>
+        <author>Erik T. Ray</author>
+        <year>2003</year>
+        <price>39.95</price>
+    </book>
+</bookstore>
 ```
 
-The work of loading the POJO from node scanning is done in this `SampleTransformer`:
-```java
-class SampleTransformer implements XMLObjectIterable.Transformer<Sample> {
+And it would be <i>great</i> if you were able to just access the books as POJOs.  To do this we can implement an XMLTransformer that creates books from the properties (names, values, and attributes) from the input XML:
 
-    private String val;
+```java
+
+public class BookTransformer implements XMLTransformer<Book> {
+    private String category;
+    private String title;
+    private List<String> authors = new ArrayList<>();
+    private String year;
+    private String price;
 
     @Override
-    public Optional<Sample> transform() {
-        if (val == null) {
+    public Optional<Book> transform() {
+        if (!canTransform()) {
             return Optional.absent();
         }
 
-        return Optional.of(new Sample(val));
+        try {
+            final Book book = new Book(
+                    title,
+                    Lists.newArrayList(authors),
+                    Integer.parseInt(year),
+                    BigDecimal.valueOf(Double.parseDouble(price)),
+                    Book.CATEGORY.valueOf(category)
+            );
+
+            return Optional.of(book);
+        } catch (RuntimeException e) {
+            //Log this somewhere.
+            return Optional.absent();
+        }
     }
 
     @Override
-    public void visit(String name, String value, Map<String, String> attribs) {
-        if (!Strings.isNullOrEmpty(value)) {
-            val = value;
+    public void visit(XMLElement xmlNodeValue, List<String> path) {
+        final String name = xmlNodeValue.getName();
+        final String value = xmlNodeValue.getValue();
+        final Map<String, String> attribs = xmlNodeValue.getAttribs();
+
+        if (name.equals("book")) {
+            this.category = attribs.get("category");
+        }
+
+        if (name.equals("title")) {
+            this.title = value;
+        }
+
+        if (name.equals("author")) {
+            authors.add(value);
+        }
+
+        if (name.equals("year")) {
+            this.year = value;
+        }
+
+        if (name.equals("price")) {
+            this.price = value;
         }
     }
 
     @Override
     public void reset() {
-        val = null;
+        this.category = null;
+        this.authors.clear();
+        this.title = null;
+        this.price = null;
+        this.year = null;
+    }
+
+    @Override
+    public boolean canTransform() {
+        return !(title == null ||
+                year == null ||
+                price == null ||
+                category == null ||
+                authors.isEmpty());
     }
 }
 ```
 
+And with this implementation, we can provide an instance and some input XML to XMLObjectIterable, which will provide back an Iterable of the Book POJO:
+
+```java
+    final XMLObjectIterable<Book> bookIterable = new XMLObjectIterable.Builder<Book>()
+                .onNodes("/bookstore/book")
+                .withParser(parser)
+                .withTransform(new BookTransformer())
+                .from(this.getClass(), "/books.xml")
+                .create();
+                
+    //Consume your Book POJOs with the bookIterable.            
+```
+
+And that's about it.  There are unit tests / examples for RSS and Atom feeds as well as donuts.  Yep donuts.
+
 # Get XMLObjectIterable into your Gradle project
 
 Add it to your build.gradle with:
+
 ```gradle
 allprojects {
     repositories {
@@ -69,11 +162,12 @@ allprojects {
     }
 }
 ```
+
 and:
 
 ```gradle
 dependencies {
-    compile 'com.github.kgilmer:XMLObjectIterable:0.7'
+    compile 'com.github.kgilmer:XMLObjectIterable:0.9'
 }
 ```
 
@@ -82,7 +176,9 @@ dependencies {
 ## Release 0.9.0 ##
 
 - Major refactoring and simplification of internals.
+- Support for complex XML tree parsing.
 - Additional tests and examples.
+- Cleaned up documentation.
 
 ## Release 0.8.0 ##
 

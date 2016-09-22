@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by kgilmer on 8/14/16.
+ * Transforms Book XML into the Book type.
  */
 public class BookTransformer implements XMLTransformer<Book> {
     private String category;
@@ -24,7 +24,6 @@ public class BookTransformer implements XMLTransformer<Book> {
     @Override
     public Optional<Book> transform() {
         if (!canTransform()) {
-
             return Optional.absent();
         }
 
