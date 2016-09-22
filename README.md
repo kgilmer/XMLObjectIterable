@@ -151,7 +151,7 @@ And with this implementation, we can provide an instance and some input XML to X
     //Consume your Book POJOs with the bookIterable.            
 ```
 
-And that's about it.  There are unit tests / examples for RSS and Atom feeds as well as donuts.  Yep donuts.
+And that's about it.  There are unit tests / examples for [RSS](https://github.com/kgilmer/XMLObjectIterable/blob/master/core/src/test/java/com/abk/xmlobjectiterable/transformers/RSSItemUnitTest.java) and Atom feeds as well as donuts.  Yep [donuts](https://github.com/kgilmer/XMLObjectIterable/blob/master/core/src/test/java/com/abk/xmlobjectiterable/transformers/DonutTransformer.java).  Also, have a look at the [XMLTransformer](https://github.com/kgilmer/XMLObjectIterable/blob/master/core/src/main/java/com/abk/xmlobjectiterable/XmlTransformer.java) interface to see what you're getting yourself into.
 
 # Get XMLObjectIterable into your Gradle project
 
