@@ -141,9 +141,14 @@ public class BookTransformer implements XMLTransformer<Book> {
 And with this implementation, we can provide an instance and some input XML to XMLObjectIterable, which will provide back an Iterable of the Book POJO:
 
 ```java
+    private XmlPullParser getParser() throws XmlPullParserException {
+        // Create and configure a XmlPullParser
+        // ...
+    }
+    
     final XMLObjectIterable<Book> bookIterable = new XMLObjectIterable.Builder<Book>()
                 .onNodes("/bookstore/book")
-                .withParser(parser)
+                .withParser(getParser())
                 .withTransform(new BookTransformer())
                 .from(this.getClass(), "/books.xml")
                 .create();
@@ -178,6 +183,11 @@ dependencies {
 ```
 
 # Release Notes #
+
+# Release 0.9.4 #
+
+- Build fixes
+
 ## Release 0.9.1 ##
 
 - Gradle version bump
