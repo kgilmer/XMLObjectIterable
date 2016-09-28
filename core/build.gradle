@@ -5,6 +5,9 @@ tasks.withType(JavaCompile) {
 
 apply plugin: 'java'
 apply plugin: 'me.champeau.gradle.jmh'
+apply plugin: 'maven'
+
+group = 'com.github.kgilmer'
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
