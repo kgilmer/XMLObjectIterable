@@ -178,7 +178,9 @@ and:
 
 ```gradle
 dependencies {
-    compile 'com.github.kgilmer:XMLObjectIterable:0.9.4'
+    compile ('com.github.kgilmer:XMLObjectIterable:0.9.4') {
+        exclude module: 'xpp3'
+    }
 }
 ```
 
