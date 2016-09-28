@@ -178,7 +178,7 @@ and:
 
 ```gradle
 dependencies {
-    compile 'com.github.kgilmer:XMLObjectIterable:0.9.1'
+    compile 'com.github.kgilmer:XMLObjectIterable:0.9.4'
 }
 ```
 
